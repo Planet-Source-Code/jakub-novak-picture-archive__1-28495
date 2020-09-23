@@ -1,0 +1,51 @@
+library bmpTojpg;
+
+uses
+  windows,
+  Graphics,
+  Sysutils,
+  Jpeg;
+
+
+const
+  MaxPixelCount   =  32768;
+  InputFileMissing = -1;
+  OutputFileAlreadyExists = -2;
+  OK =0;
+
+function ConvertBMPtoJPG(strInputFile :String; strOutputFile :String; blnEnableOverWrite :Boolean; JPGCompressQuality:Integer; blnKeepBMP : Boolean):Integer;stdcall;
+var
+  bmp: TBitmap;
+  jpg: TJPEGImage;
+begin
+  if FileExists(strOutputFile) and not blnEnableOverWrite then
+    result:=OutputFileAlreadyExists
+  else
+     if FileExists (strInputFile) then
+        Begin
+            bmp:=TBitmap.Create ;
+            bmp.LoadFromFile(strInputFile);
+            jpg:= TJpegImage.Create;
+            jpg.Assign(bmp);
+            if (JPGCompressQuality <10) or (JPGCompressQuality> 100) then
+               jpg.CompressionQuality :=90
+            else
+            jpg.CompressionQuality :=JPGCompressQuality;
+            jpg.Compress;
+            if  FileExists (strOutputFile) then Sysutils.DeleteFile(strOutputFile);
+            jpg.SaveToFile(strOutputFile);
+            if not blnKeepBMP then Sysutils.DeleteFile(strInputFile);
+            result:=OK;
+            jpg.Free;
+            bmp.Free;
+       end
+     else
+    result:=InputFileMissing;
+end;
+
+
+exports
+  ConvertBMPtoJPG;
+begin
+
+end.
